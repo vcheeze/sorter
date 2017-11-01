@@ -10,52 +10,72 @@
 
 #include <iostream>
 #include <unistd.h>
+#include "coordinator.h"
 
 using namespace std;
 
 
 int main(int argc, char *argv[]) {
-    pid_t pid = getpid();
+//     cout << argc << endl;
+//     cout << argv[1] << endl;
 
-    pid = fork();
+    string input_file, executable, output_file, type;
+    int k, a;
+    bool ascending;
 
-    if (pid == 0) { // child
-        ;
-    } else if (pid < 0) {
+    // Getting all the arguments from the command line
+    for (int i = 1; i < argc; i += 2) {
+        if (strcmp(argv[i], "-f") == 0) { // file to be sorted
+            input_file = argv[i + 1];
+        } else if (strcmp(argv[i], "-k") == 0) { // number of sorter nodes to be created
+            k = stoi(argv[i + 1]);
+        } else if (strcmp(argv[i], "-e") == 0) { // name of sort executable
+            executable = argv[i + 1];
+        } else if (strcmp(argv[i], "-a") == 0) { // attribute number
+            a = stoi(argv[i + 1]);
+        } else if (strcmp(argv[i], "-t") == 0) { // type of field to be sorted
+            type = argv[i + 1];
+        } else if (strcmp(argv[i], "-o") == 0) { // order: a for ascending and d for descending
+            if (strcmp(argv[i + 1], "a") == 0) {
+                ascending = true;
+            } else if (strcmp(argv[i + 1], "d") == 0) {
+                ascending = false;
+            } else {
+                cerr << "Please enter a valid argument.\n" << endl;
+            }
+        } else if (strcmp(argv[i], "-s") == 0) { // output file
+            output_file = argv[i + 1];
+        }
+    }
+
+    pid_t pid = fork();
+
+    if (pid == 0) { // coordinator
+        /*========== fork k sorter nodes ==========*/
+        pid_t pids[k];
+        int n = k;
+        for (int i = 0;i < n; i++) {
+            if ((pids[i] = fork()) < 0) {
+                cerr << "Fork failed in Coordinator" << endl;
+                abort();
+            } else if (pids[i] == 0) {
+                // do some work here
+                exit(0);
+            }
+        }
+        /*=========================================*/
+
+        int status;
+        pid_t cpid;
+        while (n > 0) {
+            pid = wait(&status);
+            cout << "Child with PID " << pid << " exited with status " << status << endl;
+            n--;
+        }
+    } else if (pid < 0) { // fork failed
         cerr << "Failed to fork" << endl;
         exit(1);
     } else { // parent
-//     cout << argc << endl;
-//     cout << argv[1] << endl;
-        string input_file, executable, output_file, type;
-        int k, a;
-        bool ascending;
-
-        // Getting all the arguments from the command line
-        for (int i = 1; i < argc; i += 2) {
-            if (strcmp(argv[i], "-f") == 0) { // file to be sorted
-                input_file = argv[i + 1];
-            } else if (strcmp(argv[i], "-k") == 0) { // number of sorter nodes to be created
-                k = stoi(argv[i + 1]);
-            } else if (strcmp(argv[i], "-e") == 0) { // name of sort executable
-                executable = argv[i + 1];
-            } else if (strcmp(argv[i], "-a") == 0) { // attribute number
-                a = stoi(argv[i + 1]);
-            } else if (strcmp(argv[i], "-t") == 0) { // type of field to be sorted
-                type = argv[i + 1];
-            } else if (strcmp(argv[i], "-o") == 0) { // order: a for ascending and d for descending
-                if (strcmp(argv[i + 1], "a") == 0) {
-                    ascending = true;
-                } else if (strcmp(argv[i + 1], "d") == 0) {
-                    ascending = false;
-                } else {
-                    cerr << "Please enter a valid argument.\n" << endl;
-                }
-            } else if (strcmp(argv[i], "-s") == 0) { // output file
-                output_file = argv[i + 1];
-            }
-        }
-
         cout << executable << endl;
         cout << a << k << endl;
     }
