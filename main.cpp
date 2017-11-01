@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <unistd.h>
-// #include <string.h>
 
 using namespace std;
 
@@ -20,9 +19,12 @@ int main(int argc, char *argv[]) {
 
     pid = fork();
 
-    if (pid == 0) {
+    if (pid == 0) { // child
         ;
-    } else {
+    } else if (pid < 0) {
+        cerr << "Failed to fork" << endl;
+        exit(1);
+    } else { // parent
 //     cout << argc << endl;
 //     cout << argv[1] << endl;
         string input_file, executable, output_file, type;
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
                 } else if (strcmp(argv[i + 1], "d") == 0) {
                     ascending = false;
                 } else {
-                    perror("Please enter a valid argument.\n");
+                    cerr << "Please enter a valid argument.\n" << endl;
                 }
             } else if (strcmp(argv[i], "-s") == 0) { // output file
                 output_file = argv[i + 1];
