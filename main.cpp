@@ -50,14 +50,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // open the input file
-    ifstream inputFile;
-    inputFile.open(input_file);
-    if (inputFile.is_open()) {
-        cout << "Opened input file" << endl;
-    } else {
-        cout << "Failed to open input file" << endl;
-    }
+//    // open the input file
+//    ifstream inputFile;
+//    inputFile.open(input_file);
+//    if (inputFile.is_open()) {
+//        cout << "Opened input file" << endl;
+//    } else {
+//        cout << "Failed to open input file" << endl;
+//    }
 
     // calculate the range for each sorter node
     // since I take the ceiling of this division, it means I have to check for eof in the sorters
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
         /*========== fork k sorter nodes ==========*/
         pid_t pids[k];
         int n = k;
-        for (int i = 0;i < n; i++) {
+        for (int i = 0; i < n; i++) {
             if ((pids[i] = fork()) < 0) {
                 cerr << "Fork failed in Coordinator" << endl;
                 abort();
@@ -81,22 +81,32 @@ int main(int argc, char *argv[]) {
                 ofstream outFile(out_file);
                 string line;
 
+                // open the input file
+                ifstream inputFile;
+                inputFile.open(input_file);
+                if (inputFile.is_open()) {
+                    cout << "Opened input file" << endl;
+                } else {
+                    cout << "Failed to open input file" << endl;
+                }
+
                 int count = 0;
                 while (getline(inputFile, line)) {
                     if (count >= i*range && count < (i+1)*range) {
-                        cout << line << endl;
+                        cout << count << ": " << line << endl;
                         outFile << line << endl;
                     }
                     count++;
                 }
                 outFile.close();
+                inputFile.close();
                 // exec call to sort
 
                 exit(0);
             }
         }
         // close input file
-        inputFile.close();
+//        inputFile.close();
         /*=========================================*/
 
         int status;
