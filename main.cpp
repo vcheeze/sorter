@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <unistd.h>
-#include "coordinator.h"
 
 using namespace std;
 
