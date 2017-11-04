@@ -20,13 +20,15 @@ int main(int argc, char *argv[]) {
 //     cout << argv[1] << endl;
 
     string input_file, executable, output_file, type;
-    int k, a;
+    int l, k, a;
     bool ascending;
 
     // Getting all the arguments from the command line
     for (int i = 1; i < argc; i += 2) {
-        if (strcmp(argv[i], "-f") == 0) { // file to be sorted
+        if (strcmp(argv[i], "-f") == 0) {        // file to be sorted
             input_file = argv[i + 1];
+        } else if (strcmp(argv[i], "-l") == 0) { // number of lines in file to be sorted
+            l = stoi(argv[i+1]);
         } else if (strcmp(argv[i], "-k") == 0) { // number of sorter nodes to be created
             k = stoi(argv[i + 1]);
         } else if (strcmp(argv[i], "-e") == 0) { // name of sort executable
@@ -48,9 +50,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // open the input file
+    ifstream inputFile;
+    inputFile.open(input_file);
+    if (inputFile.is_open()) {
+        cout << "Opened input file" << endl;
+    } else {
+        cout << "Failed to open input file" << endl;
+    }
+
+    // create the coordinator node
     pid_t pid = fork();
 
-    if (pid == 0) { // coordinator
+    if (pid == 0) { // child - coordinator node
         /*========== fork k sorter nodes ==========*/
         pid_t pids[k];
         int n = k;
@@ -58,8 +70,9 @@ int main(int argc, char *argv[]) {
             if ((pids[i] = fork()) < 0) {
                 cerr << "Fork failed in Coordinator" << endl;
                 abort();
-            } else if (pids[i] == 0) {
-                // do some work here
+            } else if (pids[i] == 0) { // sorter nodes
+                // do sorting here
+                cout << "In child!" << endl;
                 exit(0);
             }
         }
@@ -72,10 +85,10 @@ int main(int argc, char *argv[]) {
             cout << "Child with PID " << pid << " exited with status " << status << endl;
             n--;
         }
-    } else if (pid < 0) { // fork failed
+    } else if (pid < 0) { // coordinator fork failed
         cerr << "Failed to fork" << endl;
         exit(1);
-    } else { // parent
+    } else { // parent - root node
         cout << executable << endl;
         cout << a << k << endl;
     }
