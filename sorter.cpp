@@ -1,6 +1,8 @@
-//
-// Created by Peeta on 11/4/17.
-//
+/**
+ * This is the source code for the sorter executable.
+ * It takes an input file that is is a portion of the original file and sorts it,
+ * and then overwrites the file in the sorted order.
+ */
 
 #include <iostream>
 #include <fstream>
@@ -8,13 +10,6 @@
 #include <sstream>
 
 using namespace std;
-
-/*typedef struct recordType {
-    long ssNumber;
-    string lastName;
-    string firstName;
-    long income;
-} recordType;*/
 
 /*========================= Comparator Functions =========================*/
 // all of the functions are in ascending order
@@ -53,7 +48,7 @@ int main(int argc, char *argv[]) {
     int k, a = 0, count = 0;
     bool ascending;
     vector<string> record;
-    vector<vector<string>> records;
+    vector< vector<string> > records;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-f") == 0) {        // file to be sorted
@@ -82,13 +77,12 @@ int main(int argc, char *argv[]) {
         cout << "Sorter executable: failed to open input file" << endl;
     }
     // read the file line by line
-    while (getline(inputFile, line) && count < k) {
+    while (getline(inputFile, line)) {
         istringstream iss(line);
         copy(istream_iterator<string>(iss),
              istream_iterator<string>(),
              back_inserter(record));
         records.push_back(record);
-        count++;
     }
     // close the file
     inputFile.close();
@@ -110,7 +104,14 @@ int main(int argc, char *argv[]) {
     }
 
     ofstream outputFile;
-    outputFile.open("output/")
+    outputFile.open(input_file); // write to the same file that was given
+    /*for (int i = 0; i < records.size(); i++) {
+        outputFile << records[i][0] << " " << records[i][1] << " " << records[i][2] << " " << records[i][3] << endl;
+    }*/
+    for (auto &record : records) {
+        outputFile << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
+    }
+    outputFile.close();
 
 
     return 0;

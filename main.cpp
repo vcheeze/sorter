@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
 
 using namespace std;
 
@@ -19,7 +20,7 @@ int main(int argc, char *argv[]) {
 //     cout << argv[1] << endl;
 
     string input_file, executable, output_file, type;
-    int l, k, a;
+    int l, k, a, range;
     bool ascending;
 
     // Getting all the arguments from the command line
@@ -58,6 +59,10 @@ int main(int argc, char *argv[]) {
         cout << "Failed to open input file" << endl;
     }
 
+    // calculate the range for each sorter node
+    // since I take the ceiling of this division, it means I have to check for eof in the sorters
+    range = l/k + (l % k != 0); // length of the file / number of sorters to be created
+
     // create the coordinator node
     pid_t pid = fork();
 
@@ -71,10 +76,27 @@ int main(int argc, char *argv[]) {
                 abort();
             } else if (pids[i] == 0) { // sorter nodes
                 // do sorting here
-                cout << "In child!" << endl;
+                cout << "In child " << to_string(i) << endl;
+                string out_file = "output/sorted" + to_string(i) + ".txt";
+                ofstream outFile(out_file);
+                string line;
+
+                int count = 0;
+                while (getline(inputFile, line)) {
+                    if (count >= i*range && count < (i+1)*range) {
+                        cout << line << endl;
+                        outFile << line << endl;
+                    }
+                    count++;
+                }
+                outFile.close();
+                // exec call to sort
+
                 exit(0);
             }
         }
+        // close input file
+        inputFile.close();
         /*=========================================*/
 
         int status;
