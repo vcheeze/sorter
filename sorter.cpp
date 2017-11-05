@@ -14,9 +14,9 @@ using namespace std;
 /*========================= Comparator Functions =========================*/
 // all of the functions are in ascending order
 bool ssnumber_comparator(vector<string> record1, vector<string> record2) {
-    long ssNumber1 = stol(record1[0]);
-    long ssNumber2 = stol(record2[0]);
-    return ssNumber1 < ssNumber2;
+    string ssNumber1 = record1[0];
+    string ssNumber2 = record2[0];
+    return ssNumber1.compare(ssNumber2) < 0;
 }
 
 bool lastname_comparator(vector<string> record1, vector<string> record2) {
@@ -32,23 +32,21 @@ bool firstname_comparator(vector<string> record1, vector<string> record2) {
 }
 
 bool income_comparator(vector<string> record1, vector<string> record2) {
-    long income1 = stol(record1[3]);
-    long income2 = stol(record2[3]);
-    return income1 < income2;
+    string income1 = record1[3];
+    string income2 = record2[3];
+    return income1.compare(income2) < 0;
 }
 /*========================================================================*/
 
 int main(int argc, char *argv[]) {
-    // cout << argc << endl;
     cout << "Inside sorter executable!!!!" << endl;
-    for (int i = 1; i < argc; i++) {
-        cout << argv[i] << endl;
-    }
+    // for (int i = 1; i < argc; i++) {
+    //     cout << argv[i] << endl;
+    // }
 
     string input_file, line;
     int k, a = 0, count = 0;
     bool ascending;
-    // vector<string> record;
     vector< vector<string> > records;
 
     for (int i = 1; i < argc; i += 2) {
@@ -112,7 +110,6 @@ int main(int argc, char *argv[]) {
     // }
     for (auto &r : records) {
         outputFile << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << endl;
-        // cout << r[0] << endl;
     }
     outputFile.close();
 

@@ -6,11 +6,20 @@
  *     k: number of sorter nodes
  *     attribute on which sorting will be carried out
  *     the executable to be used for sorting
+ *
+ * pipe --> fork --> dup --> exec
+ * close the read for children (a[0])
+ * close the write for parent once you spawn merger, because merger has to read
+ * gets() with file stream
+ *
+ * or use named pipes
  */
 
 #include <iostream>
 #include <unistd.h>
 #include <fstream>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -54,13 +63,12 @@ int main(int argc, char *argv[]) {
         /*=============== fork k sorter nodes ===============*/
         pid_t pids[k];
         int n = k;
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < n; i++) {
             if ((pids[i] = fork()) < 0) {
-                cerr << "Fork failed in Coordinator" << endl;
+                cerr << "Failed to fork Sorter Node in Coordinator" << endl;
                 abort();
             } else if (pids[i] == 0) { // sorter nodes
-                // do sorting here
-                cout << "In child " << to_string(i) << endl;
+                // cout << "In child " << to_string(i) << endl;
                 string out_file = "output/sorted" + to_string(i) + ".txt";
                 ofstream outFile(out_file);
                 string line;
@@ -98,33 +106,97 @@ int main(int argc, char *argv[]) {
                 cout << "This shouldn't get printed if exec call was successful" << endl;
                 _exit(1);
             }
-            else { // in the parent - coordinator node
-              int status;
-              pid_t cpid;
-              while (n > 0) {
-                  cpid = wait(&status);
-                  cout << "Child with PID " << cpid << " exited with status " << status << endl;
-                  n--;
-                  break;
-              }
-            }
-        }
-        /*===================================================*/
+          }
+            /*===================================================*/
+            // else { // in the parent - coordinator node
+            //     int status;
+            //     pid_t cpid;
+            //     while (n > 0) {
+            //         cpid = wait(&status);
+            //         cout << "Child with PID " << cpid << " exited with status " << status << endl;
+            //         n--;
+            //     }
 
-        // int status;
-        // pid_t cpid;
-        // while (n > 0) {
-        //     cpid = wait(&status);
-        //     cout << "Child with PID " << cpid << " exited with status " << status << endl;
-        //     n--;
-        //     break;
-        // }
+                // pid_t merger_pid;
+                // if ((merger_pid = fork()) < 0) {
+                //     cerr << "Failed to fork Merger Node in Coordinator" << endl;
+                //     abort();
+                // } else if (pids[i] == 0) { // child - merger node
+                //     n = k;
+                //     ifstream inFiles[k];
+                //     int index[10] = {0}; // the indices pointing to each file
+                //
+                //     // open the files to be read
+                //     for (i = 0; i < n; i++) {
+                //         string file_path = "output/sorted" + to_string(i) + ".txt";
+                //         inFiles[i].open(file_path);
+                //         if (inFiles[i].is_open()) {
+                //             cout << "Opened " << file_path << " in Merger Node" << endl;
+                //         } else {
+                //             cout << "Failed to open file in Merger Node" << endl;
+                //         }
+                //     }
+                //
+                //     // open final output file
+                //     ofstream outputFile;
+                //     outputFile.open(output_file);
+                //     if (outputFile.is_open()) {
+                //         cout << "Opened final output file" << endl;
+                //     } else {
+                //         cout << "Failed to open final output file" << endl;
+                //     }
+                //
+                //     while (true) {
+                //         int done = 0;
+                //         if (done == n) {
+                //             break;
+                //         }
+                //         vector< vector<string> > records;
+                //         vector<string> values;
+                //         // get first value from every file
+                //         for (i = 0; i < n; i++) {
+                //             string line;
+                //             getline(inFiles[i], line);
+                //             istringstream iss(line);
+                //             vector<string> record;
+                //             copy(istream_iterator<string>(iss),
+                //                  istream_iterator<string>(),
+                //                  back_inserter(record));
+                //             records.push_back(record);
+                //             values.push_back(record[a]);
+                //         }
+                //
+                //         string min = *min_element(values.begin(), values.end());
+                //         int min_index = static_cast<int>(min_element(values.begin(), values.end()) - values.begin());
+                //         index[min_index]++; // increment the index to point to the next smallest element
+                //         // write to the final output file
+                //         outputFile << records[min_index][0] << " "
+                //                    << records[min_index][1] << " "
+                //                    << records[min_index][2] << " "
+                //                    << records[min_index][3] << endl;
+                //         break;
+                //     }
+                //
+                //     // close all files
+                //     for (i = 0; i < n; i++) {
+                //         inFiles[i].close();
+                //     }
+                //     outputFile.close();
+                // }
+            // }
+          int status;
+          pid_t cpid;
+          while (n > 0) {
+              cpid = wait(&status);
+              cout << "Child with PID " << cpid << " exited with status " << status << endl;
+              n--;
+          }
     } else if (pid < 0) { // coordinator fork failed
         cerr << "Failed to fork" << endl;
         exit(1);
     } else { // parent - root node
-        cout << executable << endl;
-        cout << a << k << endl;
+        // cout << executable << endl;
+        // cout << a << k << endl;
     }
 
     return 0;
