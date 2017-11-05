@@ -19,9 +19,8 @@ int main(int argc, char *argv[]) {
 //     cout << argc << endl;
 //     cout << argv[1] << endl;
 
-    string input_file, executable, output_file, type;
+    string input_file, executable, output_file, type, order;
     int l, k, a, range;
-    bool ascending;
 
     // Getting all the arguments from the command line
     for (int i = 1; i < argc; i += 2) {
@@ -38,26 +37,11 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "-t") == 0) { // type of field to be sorted
             type = argv[i + 1];
         } else if (strcmp(argv[i], "-o") == 0) { // order: a for ascending and d for descending
-            if (strcmp(argv[i + 1], "a") == 0) {
-                ascending = true;
-            } else if (strcmp(argv[i + 1], "d") == 0) {
-                ascending = false;
-            } else {
-                cerr << "Please enter a valid argument.\n" << endl;
-            }
+            order = argv[i + 1];
         } else if (strcmp(argv[i], "-s") == 0) { // output file
             output_file = argv[i + 1];
         }
     }
-
-//    // open the input file
-//    ifstream inputFile;
-//    inputFile.open(input_file);
-//    if (inputFile.is_open()) {
-//        cout << "Opened input file" << endl;
-//    } else {
-//        cout << "Failed to open input file" << endl;
-//    }
 
     // calculate the range for each sorter node
     // since I take the ceiling of this division, it means I have to check for eof in the sorters
@@ -67,10 +51,10 @@ int main(int argc, char *argv[]) {
     pid_t pid = fork();
 
     if (pid == 0) { // child - coordinator node
-        /*========== fork k sorter nodes ==========*/
+        /*=============== fork k sorter nodes ===============*/
         pid_t pids[k];
         int n = k;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < 2; i++) {
             if ((pids[i] = fork()) < 0) {
                 cerr << "Fork failed in Coordinator" << endl;
                 abort();
@@ -93,29 +77,48 @@ int main(int argc, char *argv[]) {
                 int count = 0;
                 while (getline(inputFile, line)) {
                     if (count >= i*range && count < (i+1)*range) {
-                        cout << count << ": " << line << endl;
+                        // cout << count << ": " << line << endl;
                         outFile << line << endl;
                     }
                     count++;
                 }
+                // close files
                 outFile.close();
                 inputFile.close();
-                // exec call to sort
 
-                exit(0);
+                // exec call to sort
+                char *args[] = {const_cast<char *>("./sorterexec"),
+                                const_cast<char *>("-f"), const_cast<char *>(out_file.c_str()),
+                                const_cast<char *>("-k"), const_cast<char *>(to_string(range).c_str()),
+                                const_cast<char *>("-a"), const_cast<char *>(to_string(a).c_str()),
+                                const_cast<char *>("-o"), const_cast<char *>(order.c_str()),
+                                NULL};
+                execvp(args[0], args);
+
+                cout << "This shouldn't get printed if exec call was successful" << endl;
+                _exit(1);
+            }
+            else { // in the parent - coordinator node
+              int status;
+              pid_t cpid;
+              while (n > 0) {
+                  cpid = wait(&status);
+                  cout << "Child with PID " << cpid << " exited with status " << status << endl;
+                  n--;
+                  break;
+              }
             }
         }
-        // close input file
-//        inputFile.close();
-        /*=========================================*/
+        /*===================================================*/
 
-        int status;
-        pid_t cpid;
-        while (n > 0) {
-            pid = wait(&status);
-            cout << "Child with PID " << pid << " exited with status " << status << endl;
-            n--;
-        }
+        // int status;
+        // pid_t cpid;
+        // while (n > 0) {
+        //     cpid = wait(&status);
+        //     cout << "Child with PID " << cpid << " exited with status " << status << endl;
+        //     n--;
+        //     break;
+        // }
     } else if (pid < 0) { // coordinator fork failed
         cerr << "Failed to fork" << endl;
         exit(1);

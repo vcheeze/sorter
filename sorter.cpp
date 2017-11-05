@@ -39,7 +39,8 @@ bool income_comparator(vector<string> record1, vector<string> record2) {
 /*========================================================================*/
 
 int main(int argc, char *argv[]) {
-    cout << argc << endl;
+    // cout << argc << endl;
+    cout << "Inside sorter executable!!!!" << endl;
     for (int i = 1; i < argc; i++) {
         cout << argv[i] << endl;
     }
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
     string input_file, line;
     int k, a = 0, count = 0;
     bool ascending;
-    vector<string> record;
+    // vector<string> record;
     vector< vector<string> > records;
 
     for (int i = 1; i < argc; i += 2) {
@@ -79,6 +80,7 @@ int main(int argc, char *argv[]) {
     // read the file line by line
     while (getline(inputFile, line)) {
         istringstream iss(line);
+        vector<string> record;
         copy(istream_iterator<string>(iss),
              istream_iterator<string>(),
              back_inserter(record));
@@ -105,11 +107,12 @@ int main(int argc, char *argv[]) {
 
     ofstream outputFile;
     outputFile.open(input_file); // write to the same file that was given
-    /*for (int i = 0; i < records.size(); i++) {
-        outputFile << records[i][0] << " " << records[i][1] << " " << records[i][2] << " " << records[i][3] << endl;
-    }*/
-    for (auto &record : records) {
-        outputFile << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
+    // for (int i = 0; i < records.size(); i++) {
+    //     outputFile << records[i][0] << " " << records[i][1] << " " << records[i][2] << " " << records[i][3] << endl;
+    // }
+    for (auto &r : records) {
+        outputFile << r[0] << " " << r[1] << " " << r[2] << " " << r[3] << endl;
+        // cout << r[0] << endl;
     }
     outputFile.close();
 
