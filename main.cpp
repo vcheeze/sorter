@@ -110,10 +110,10 @@ int main(int argc, char *argv[]) {
         /*=============================================================*/
 
         int status;
-        pid_t cpid;
+        pid_t spid;
         while (n > 0) {
-            cpid = wait(&status);
-            cout << "Child with PID " << cpid << " exited with status " << status << endl;
+            spid = wait(&status);
+            cout << "Sorter with PID " << spid << " exited with status " << status << endl;
             n--;
         }
 
@@ -208,12 +208,18 @@ int main(int argc, char *argv[]) {
             outputFile.close();
             /*=============================================================*/
         }
+
+        pid_t mpid;
+        mpid = wait(&status);
+        cout << "Merger with PID " << mpid << " exited with status " << status << endl;
     } else if (pid < 0) { // coordinator fork failed
         cerr << "Failed to fork" << endl;
         exit(1);
     } else { // parent - root node
-        // cout << executable << endl;
-        // cout << a << k << endl;
+        int status;
+        pid_t cpid;
+        cpid = wait(&status);
+        cout << "Coordinator with PID " << cpid << " exited with status " << status << endl;
     }
 
     return 0;
