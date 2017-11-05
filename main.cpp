@@ -148,35 +148,57 @@ int main(int argc, char *argv[]) {
                 cout << "Failed to open final output file" << endl;
             }
 
+            vector< vector<string> > records;
+            vector<string> values;
+            // get first value from every file
+            for (i = 0; i < n; i++) {
+                string line;
+                getline(inFiles[i], line);
+                istringstream iss(line);
+                vector<string> record;
+                copy(istream_iterator<string>(iss),
+                     istream_iterator<string>(),
+                     back_inserter(record));
+                records.push_back(record);
+                values.push_back(record[a]);
+            }
+
             while (true) {
                 int done = 0;
                 if (done == n) {
                     break;
                 }
-                vector< vector<string> > records;
-                vector<string> values;
-                // get first value from every file
-                for (i = 0; i < n; i++) {
-                    string line;
-                    getline(inFiles[i], line);
-                    istringstream iss(line);
-                    vector<string> record;
-                    copy(istream_iterator<string>(iss),
-                         istream_iterator<string>(),
-                         back_inserter(record));
-                    records.push_back(record);
-                    values.push_back(record[a]);
-                }
 
+                // get the minimum element
                 string min = *min_element(values.begin(), values.end());
+                // get the index of the minimum element
                 int min_index = static_cast<int>(min_element(values.begin(), values.end()) - values.begin());
-                index[min_index]++; // increment the index to point to the next smallest element
+
                 // write to the final output file
                 outputFile << records[min_index][0] << " "
                            << records[min_index][1] << " "
                            << records[min_index][2] << " "
                            << records[min_index][3] << endl;
-                break;
+
+                index[min_index]++; // increment the index to point to the next smallest element
+                if (index[min_index] == range) {
+                    done++; // increment variable 'done' by 1 when a file reaches end
+                }
+
+                // get the next line from the file
+                string line;
+                getline(inFiles[min_index], line);
+                istringstream iss(line);
+                vector<string> record;
+                copy(istream_iterator<string>(iss),
+                     istream_iterator<string>(),
+                     back_inserter(record));
+                records[min_index] = record;
+                values[min_index] = record[a];
+//                records.insert(records.begin() + min_index, record);
+//                values.insert(values.begin() + min_index, record[a]);
+
+                // break;
             }
 
             // close all files
