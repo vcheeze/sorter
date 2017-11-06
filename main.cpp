@@ -20,6 +20,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <sys/times.h>
+#include <cmath>
 
 using namespace std;
 
@@ -27,6 +29,12 @@ using namespace std;
 int main(int argc, char *argv[]) {
 //     cout << argc << endl;
 //     cout << argv[1] << endl;
+
+    // for time keeping
+    double t_total1, t_total2;
+    struct tms tb_total1, tb_total2;
+
+    t_total1 = (double) times(&tb_total1);
 
     string input_file, executable, output_file, type, order;
     int l, k, a, range;
@@ -52,6 +60,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // for time keeping
+    double t1[k], t2[k], t_merger1, t_merger2;
+    double cpu_time;
+    struct tms tb1[k], tb2[k], tb_merger1, tb_merger2;
+    double ticspersec;
+
+    ticspersec = (double) sysconf(_SC_CLK_TCK);
+
     // calculate the range for each sorter node
     // since I take the ceiling of this division, it means I have to check for eof in the sorters
     range = l/k + (l % k != 0); // length of the file / number of sorters to be created
@@ -61,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     if (pid == 0) { // child - coordinator node
         /*==================== fork k Sorter Nodes ====================*/
-        pid_t pids[k];
+        pid_t pids[10];
         int n = k;
         for (int i = 0; i < n; i++) {
             if ((pids[i] = fork()) < 0) {
@@ -69,6 +85,8 @@ int main(int argc, char *argv[]) {
                 abort();
             } else if (pids[i] == 0) { // sorter nodes
                 // cout << "In child " << to_string(i) << endl;
+                t1[i] = (double) times(&tb1[i]); // timestamp 1
+
                 string out_file = "output/sorted" + to_string(i) + ".txt";
                 ofstream outFile(out_file);
                 string line;
@@ -113,6 +131,9 @@ int main(int argc, char *argv[]) {
         pid_t spid;
         while (n > 0) {
             spid = wait(&status);
+            auto it = find(begin(pids), end(pids), spid); // find the PID in the array
+            int p_index = static_cast<int>(distance(begin(pids), it));
+            t2[p_index] = (double) times(&tb2[p_index]); // timestamp 2 for the corresponding child process
             cout << "Sorter with PID " << spid << " exited with status " << status << endl;
             n--;
         }
@@ -123,6 +144,7 @@ int main(int argc, char *argv[]) {
             cerr << "Failed to fork Merger Node in Coordinator" << endl;
             abort();
         } else if (merger_pid == 0) { // child - merger node
+            t_merger1 = (double) times(&tb_merger1); // timestamp 1
             int i;
             n = k;
             ifstream inFiles[k];
@@ -212,6 +234,7 @@ int main(int argc, char *argv[]) {
         pid_t mpid;
         mpid = wait(&status);
         cout << "Merger with PID " << mpid << " exited with status " << status << endl;
+        t_merger2 = (double) times(&tb_merger2); // timestamp 1
     } else if (pid < 0) { // coordinator fork failed
         cerr << "Failed to fork" << endl;
         exit(1);
@@ -220,7 +243,15 @@ int main(int argc, char *argv[]) {
         pid_t cpid;
         cpid = wait(&status);
         cout << "Coordinator with PID " << cpid << " exited with status " << status << endl;
+
+        for (int i = 0; i < k; i++) {
+            cout << "Sorter " << i << " finished in "
+                 << abs((t2[i] - t1[i]) / ticspersec) << " seconds" << endl;
+        }
+        cout << "Merger finished in " << (t_merger2 - t_merger1) / ticspersec << " seconds" << endl;
     }
 
+    t_total2 = (double) times(&tb_total2);
+    cout << "Entire sorting process finished in " << (t_total2 - t_total1) / ticspersec << " seconds" << endl;
     return 0;
 }
