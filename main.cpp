@@ -80,6 +80,7 @@ int main(int argc, char *argv[]) {
         pid_t pids[10];
         int n = k;
         for (int i = 0; i < n; i++) {
+          // pipe
             if ((pids[i] = fork()) < 0) {
                 cerr << "Failed to fork Sorter Node in Coordinator" << endl;
                 abort();
