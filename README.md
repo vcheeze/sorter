@@ -2,6 +2,8 @@
 Operating Systems Project 2
 
 ## How to run
+First run `make` in order to compile the files.
+
 Type `./mysortapp -k NumOfWorkers -e NameOfSortExecutable -a AttributeNumber -t
 Type -o Order -s OutFile`, where `mysortapp` is the name of your executable
 program, `NumOfWorkers` is the number of *sorters* to be spawned,
